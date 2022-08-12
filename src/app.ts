@@ -1,7 +1,7 @@
 import { getData, populateTable } from "./utils";
 
 const pageViewLabel = document.querySelector(
-  "label[data-pageview]"
+  '[data-pageview="page-view"]'
 ) as HTMLLabelElement;
 const nextBtn = document.querySelector('[data-nextbtn="nextBtn"]') as HTMLButtonElement;
 const prevBtn = document.querySelector('[data-prevbtn="prevBtn"]') as HTMLButtonElement;
@@ -20,7 +20,8 @@ const setPageIndex = (page?: number) => {
 }
 
 const handleNextClick = async () => {
-  setPageIndex();
+  // setPageIndex();
+  toggleLoader();
   // currentPageNumber+=1;
   enableBtn(prevBtn);
   // using just this was not enough to track array index
@@ -36,11 +37,13 @@ const handleNextClick = async () => {
     response = await getData(arrayIndex);
     populateTable(response?.results[0][arrayIndex]);
   }
-  setPageIndex(currentPageNumber);
+  toggleLoader(currentPageNumber);
+  // setPageIndex(currentPageNumber);
 }
 
 const handlePrevClick = async () => {
-  setPageIndex();
+  // setPageIndex();
+  toggleLoader();
   currentPageNumber -= 1;
   // if current page is 1, disable prev button
   currentPageNumber === 1 && disableBtn(prevBtn);
@@ -53,7 +56,20 @@ const handlePrevClick = async () => {
     arrayIndex -= 1;
     populateTable(response?.results[0][arrayIndex]);
   }
-  setPageIndex(currentPageNumber);
+  toggleLoader(currentPageNumber);
+  // setPageIndex(currentPageNumber);
+}
+
+export function toggleLoader(page?: number) {
+  pageViewLabel?.replaceChildren("");
+  if (!page) {
+    const div = document.createElement("div");
+    div.setAttribute("class", "lds-dual-ring");
+    pageViewLabel?.appendChild(div);
+    return;
+  }
+  const pageText = document.createTextNode(`Showing Page ${page}`);
+  pageViewLabel?.appendChild(pageText);
 }
 
 const disableBtn = (btn) => {
@@ -69,15 +85,17 @@ prevBtn?.addEventListener("click", handlePrevClick);
 
 const startApp = async () => {
   //disable both prev and next buttons until data is loaded
+  toggleLoader();
   disableBtn(nextBtn);
   disableBtn(prevBtn);
 
   response = await getData(currentPageNumber);
-  setPageIndex(currentPageNumber);
+  // setPageIndex(currentPageNumber);
   // if there is next, enable next button
   if (response?.results[0].paging.next) {
     enableBtn(nextBtn);
   }
+  toggleLoader(currentPageNumber);
 
   // populate table
   populateTable(response?.results[0][currentPageNumber]);
